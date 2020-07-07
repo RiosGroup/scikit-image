@@ -16,6 +16,8 @@ cimport numpy as cnp
 cimport cython
 cnp.import_array()
 
+from .._shared.fused_numerics cimport np_floats
+
 ctypedef cnp.int32_t DTYPE_INT32_t
 ctypedef cnp.int8_t DTYPE_BOOL_t
 
@@ -29,12 +31,13 @@ include "heap_watershed.pxi"
 @cython.overflowcheck(False)
 @cython.unraisable_tracebacks(False)
 cdef inline double _euclid_dist(Py_ssize_t pt0, Py_ssize_t pt1,
-                                cnp.intp_t[::1] strides) nogil:
+                                cnp.intp_t[::1] strides,
+                                np_floats[::1] spacing) nogil:
     """Return the Euclidean distance between raveled points pt0 and pt1."""
     cdef double result = 0
     cdef double curr = 0
     for i in range(strides.shape[0]):
-        curr = (pt0 // strides[i]) - (pt1 // strides[i])
+        curr = spacing[i] * ((pt0 // strides[i]) - (pt1 // strides[i]))
         result += curr * curr
         pt0 = pt0 % strides[i]
         pt1 = pt1 % strides[i]
@@ -83,6 +86,7 @@ def watershed_raveled(cnp.float64_t[::1] image,
                       DTYPE_BOOL_t[::1] mask,
                       cnp.intp_t[::1] strides,
                       cnp.double_t compactness,
+                      np_floats[::1] spacing,
                       DTYPE_INT32_t[::1] output,
                       DTYPE_BOOL_t wsl):
     """Perform watershed algorithm using a raveled image and neighborhood.
@@ -112,6 +116,10 @@ def watershed_raveled(cnp.float64_t[::1] image,
     compactness : float
         A value greater than 0 implements the compact watershed algorithm
         (see .py file).
+    spacing : 1D array of np_floats, shape (3,)
+        The voxel spacing along each image dimension. This parameter
+        controls the weights of the distances along z, y, and x during
+        distance transform.
     output : array of int
         The output array, which must already contain nonzero entries at all the
         seed locations.
@@ -179,7 +187,7 @@ def watershed_raveled(cnp.float64_t[::1] image,
                 if compact:
                     new_elem.value += (compactness *
                                        _euclid_dist(neighbor_index, elem.source,
-                                                    strides))
+                                                    strides, spacing))
                 elif not wsl:
                     # in the simplest watershed case (no compactness and no
                     # watershed lines), we can label a pixel at the time that
