@@ -50,6 +50,7 @@ PROPS = {
     'MajorAxisLength': 'major_axis_length',
     'MaxIntensity': 'max_intensity',
     'MeanIntensity': 'mean_intensity',
+    'MedianIntensity': 'median_intensity',
     'MinIntensity': 'min_intensity',
     'MinorAxisLength': 'minor_axis_length',
     'Moments': 'moments',
@@ -100,6 +101,7 @@ COL_DTYPES = {
     'major_axis_length': float,
     'max_intensity': int,
     'mean_intensity': float,
+    'median_intensity': float,
     'min_intensity': int,
     'minor_axis_length': float,
     'moments': float,
@@ -339,7 +341,7 @@ class RegionProperties:
         identity_convex_hull = np.pad(self.convex_image,
                                       2, mode='constant', constant_values=0)
         if self._ndim == 2:
-            coordinates = np.vstack(find_contours(identity_convex_hull, .5, 
+            coordinates = np.vstack(find_contours(identity_convex_hull, .5,
                                                   fully_connected = 'high'))
         elif self._ndim == 3:
             coordinates, _, _, _ = marching_cubes(identity_convex_hull, level=.5)
@@ -396,6 +398,10 @@ class RegionProperties:
     @property
     def mean_intensity(self):
         return np.mean(self.intensity_image[self.image])
+
+    @property
+    def median_intensity(self):
+        return np.median(self.intensity_image[self.image])
 
     @property
     def min_intensity(self):
@@ -922,6 +928,8 @@ def regionprops(label_image, intensity_image=None, cache=True,
         Value with the greatest intensity in the region.
     **mean_intensity** : float
         Value with the mean intensity in the region.
+    **median_intensity** : float
+        Value with the median intensity in the region.
     **min_intensity** : float
         Value with the least intensity in the region.
     **minor_axis_length** : float
