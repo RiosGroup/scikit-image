@@ -44,6 +44,8 @@ PROPS = {
     'MajorAxisLength': 'major_axis_length',
     'MaxIntensity': 'max_intensity',
     'MeanIntensity': 'mean_intensity',
+    'MedianIntensity': 'median_intensity',
+    'VarianceIntensity': 'variance_intensity',
     'MinIntensity': 'min_intensity',
     'MinorAxisLength': 'minor_axis_length',
     'Moments': 'moments',
@@ -95,6 +97,8 @@ COL_DTYPES = {
     'major_axis_length': float,
     'max_intensity': float,
     'mean_intensity': float,
+    'median_intensity': float,
+    'variance_intensity': float,
     'min_intensity': float,
     'minor_axis_length': float,
     'moments': float,
@@ -404,6 +408,14 @@ class RegionProperties:
     @property
     def mean_intensity(self):
         return np.mean(self.intensity_image[self.image], axis=0)
+
+    @property
+    def median_intensity(self):
+        return np.median(self.intensity_image[self.image])
+
+    @property
+    def variance_intensity(self):
+        return np.variance(self.intensity_image[self.image])
 
     @property
     def min_intensity(self):
@@ -988,6 +1000,10 @@ def regionprops(label_image, intensity_image=None, cache=True,
         Value with the greatest intensity in the region.
     **mean_intensity** : float
         Value with the mean intensity in the region.
+    **median_intensity** : float
+        Value with the median intensity in the region.
+    **variance_intensity** : float
+        Value with the intensity variance in the region.
     **min_intensity** : float
         Value with the least intensity in the region.
     **minor_axis_length** : float
