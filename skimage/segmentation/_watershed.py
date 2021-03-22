@@ -93,7 +93,7 @@ def _validate_inputs(image, markers, mask, connectivity):
 
 
 def watershed(image, markers=None, connectivity=1, offset=None, mask=None,
-              compactness=0, watershed_line=False):
+              compactness=0, spacing=None, watershed_line=False):
     """Find watershed basins in `image` flooded from given `markers`.
 
     Parameters
@@ -217,9 +217,16 @@ def watershed(image, markers=None, connectivity=1, offset=None, mask=None,
     marker_locations = np.flatnonzero(output)
     image_strides = np.array(image.strides, dtype=np.intp) // image.itemsize
 
+    # NOTE: as in slic: https://github.com/scikit-image/scikit-image/blob/master/skimage/segmentation/slic_superpixels.py
+    if spacing is None:
+        spacing = np.ones(3, dtype='float')
+    elif isinstance(spacing, (list, tuple)):
+        spacing = np.ascontiguousarray(spacing, dtype='float')
+
     _watershed_cy.watershed_raveled(image.ravel(),
                                     marker_locations, flat_neighborhood,
                                     mask, image_strides, compactness,
+                                    spacing,
                                     output.ravel(),
                                     watershed_line)
 
